@@ -48,10 +48,14 @@ You can configure the system by modifying the following constants:
 
 
 ## API Key
+
 The system uses OpenWeatherMap API for real-time weather data. You must replace 'API_KEY' in the script with your actual API key from OpenWeatherMap.
 
 ## Visualization 
+
 The visualization part of the script displays the satellite's orbit around the Earth in real-time, adjusting for the Earth's rotation and the satellite's orbital speed. 
+![SatSim](https://github.com/logangutknecht/LEO-Sat-Scheduling-System/assets/105251737/ddea999f-c6a7-43f0-8a29-076a00e6af98)
+
 
 ## Disclaimer 
 
