@@ -12,13 +12,13 @@ from shapely.geometry import Point, MultiPolygon
 # Constants
 EARTH_RADIUS = 6371  # in kilometers
 SATELLITE_ALTITUDE = 500  # in kilometers
-CAPTURE_RADIUS = 200  # in kilometers (approximately 25 miles)
-INCLINATION = 45  # in degrees
+CAPTURE_RADIUS = 500  # in kilometers (approximately 25 miles)
+INCLINATION = 50  # in degrees
 ORBITAL_PERIOD = 90 * 60  # in seconds (90 minutes)
 EARTH_ROTATION_SPEED = 360 / (24 * 60 * 60)  # degrees per second
 
 API_ENDPOINT = "http://api.openweathermap.org/data/2.5/weather"
-API_KEY = ""  # Replace with your actual API key
+API_KEY = "0a5ba3d622a689ae34ed257ba0b4b007"  # Replace with your actual API key
 
 
 def calculate_orbital_period(altitude):
@@ -59,52 +59,10 @@ def simulate_satellite_tasking(num_commands):
             commands.append((lat, lon))
     return commands
 
-
-def update_satellite(frame, satellite, commands, scatter):
-    command_lat, command_lon = commands[frame]
-
-    # Fetch weather data for the GPS location
-    params = {
-        "lat": command_lat,
-        "lon": command_lon,
-        "appid": API_KEY,
-    }
-    response = requests.get(API_ENDPOINT, params=params)
-    weather_data = response.json()
-
-    # Check the cloud cover percentage
-    clouds = weather_data["clouds"]["all"]
-
-    # Calculate the distance between the command location and the satellite's nadir point
-    satellite_lat, satellite_lon = 0, 0  # Assuming a simplified orbit over the equator
-    distance = distance_between_points(satellite_lat, satellite_lon, command_lat, command_lon)
-
-    if distance <= CAPTURE_RADIUS and clouds < 50:
-        scatter.set_color('green')
-    elif distance <= CAPTURE_RADIUS and clouds >= 50:
-        scatter.set_color('red')
-    else:
-        scatter.set_color('white')
-
-    satellite.set_data(satellite_lon, satellite_lat)
-    scatter.set_offsets(np.array([command_lon, command_lat]).T)
-
-    return satellite, scatter
-
-
-
-def simulate_satellite_tasking(num_commands):
-    commands = []
-    while len(commands) < num_commands:
-        lat = random.uniform(-90, 90)
-        lon = random.uniform(-180, 180)
-        if is_land(lat, lon):
-            commands.append((lat, lon))
-    return commands
-
-def visualize_satellite_tasking(commands, speed_factor=1):
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+def visualize_satellite_tasking(commands, speed_factor=1, figure=None):
+    if figure is None:
+        figure = plt.figure(figsize=(10, 8))
+    ax = figure.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     ax.set_extent([-180, 180, -90, 90], crs=ccrs.PlateCarree())
     ax.add_feature(cfeature.LAND)
     ax.add_feature(cfeature.OCEAN)
@@ -115,7 +73,7 @@ def visualize_satellite_tasking(commands, speed_factor=1):
     lats, lons = zip(*commands)
 
     colors = ['white'] * num_commands
-    scatter = ax.scatter(lons, lats, s=100, c=colors, marker='o', zorder=10, transform=ccrs.PlateCarree())
+    scatter = ax.scatter(lons, lats, s=100, c=colors, marker='.', zorder=10, transform=ccrs.PlateCarree())
 
     # Calculate the orbital path
     num_points = 1000  # Increase the number of points for a smoother path
@@ -167,13 +125,16 @@ def visualize_satellite_tasking(commands, speed_factor=1):
 
                 # Check the cloud cover percentage
                 clouds = weather_data["clouds"]["all"]
-                if clouds < 30:
+                if clouds < 50:
                     colors[i] = 'green'
+                    print(f"Image captured at ({command_lat}, {command_lon}); {clouds}% cloud cover!")
                 else:
                     colors[i] = 'red'
+                    print(f"Image NOT captured at ({command_lat}, {command_lon}); {clouds}% cloud cover!")
+                
 
         scatter.set_color(colors)
-        satellite.set_data(satellite_lon, satellite_lat)
+        satellite.set_data([satellite_lon], [satellite_lat])
         satellite.set_color(capture_color)
 
         # Update the path line
@@ -213,13 +174,13 @@ def visualize_satellite_tasking(commands, speed_factor=1):
         return scatter, satellite, *path_segments, time_text
 
     num_frames = num_points
-    ani = FuncAnimation(fig, update, frames=num_frames, blit=True, interval=ORBITAL_PERIOD*1000/num_frames//speed_factor)
+    ani = FuncAnimation(figure, update, frames=num_frames, blit=True, interval=ORBITAL_PERIOD*1000/num_frames//speed_factor)
 
     plt.show()
     
-
-# Run the simulation
-num_commands = 100
-commands = simulate_satellite_tasking(num_commands)
-speed_factor = 10  # Adjust the speed factor as desired
-visualize_satellite_tasking(commands, speed_factor)
+if __name__ == '__main__':
+    # Run the simulation
+    num_commands = 100
+    commands = simulate_satellite_tasking(num_commands)
+    speed_factor = 10  # Adjust the speed factor as desired
+    visualize_satellite_tasking(commands, speed_factor)
