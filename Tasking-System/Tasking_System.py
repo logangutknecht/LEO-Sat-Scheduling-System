@@ -18,7 +18,7 @@ ORBITAL_PERIOD = 90 * 60  # in seconds (90 minutes)
 EARTH_ROTATION_SPEED = 360 / (24 * 60 * 60)  # degrees per second
 
 API_ENDPOINT = "http://api.openweathermap.org/data/2.5/weather"
-API_KEY = "0a5ba3d622a689ae34ed257ba0b4b007"  # Replace with your actual API key
+API_KEY = ""  # Replace with your actual API key
 
 
 def calculate_orbital_period(altitude):
